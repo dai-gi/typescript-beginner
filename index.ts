@@ -1,23 +1,38 @@
+import { Book } from "./book";
+import { getBookDetail } from "./function";
+
+// any型：全ての型を許容する
+
 const books = [
-  { title: 'TypeScript入門', author: '田中太郎', available: true },
-  { title: 'TypeScript基礎', author: '山田花子', available: false },
-  { title: 'Reactと実践', author: '鈴木一郎', available: true }
+  { id: 1, title: 'TypeScript入門', author: '田中太郎', available: true },
+  { id: 2, title: 'TypeScript基礎', author: '山田花子', available: false },
+  { id: 3, title: 'Reactと実践', author: '鈴木一郎', available: true }
 ];
 
-type Book = {
-  title: string,
-  author: string,
-  available: boolean
-}
+// オブジェクト型はネストさせることができる
+type BorrowedBook = {
+  id: number;
+  book: Book; // 上記のBook型を使用している
+  // book?: Book,  bookの接尾辞に「?」をつけることで、bookが無くても許容されるようになる
 
-const borrowedBooks = [];
+  // リテラル（'borrowed', 'return'）：直接値を指定して、それ以外の値は入らないようにすること
+  // ユニオン（ | ）：論理和と同じで'borrowed'または、'return'の値だけが許容される
+  status: 'borrowed' | 'return';
+};
+
+// 配列の型宣言
+const borrowedBooks: BorrowedBook[] = [];
+
 let newBookId = 1;
 
 // オブジェクト型の宣言
 // book引数に渡されるオブジェクトの中身の型を宣言することもできる
-function addNewBook(book: Book) {
-  books.push(book);
-  return book;
+function addNewBook(book: Omit<Book, "id">): void { // voidを書くことで戻り値がないことを明示することができる
+  const newBook = {     // ↑ ユーティリティ型：オブジェクト型のプロパティを除外し、新たなオブジェクト型を作ることができる
+    id: newBookId++,
+    ...book // TODO: ネスレ構文についてコメントを書く
+  }
+  books.push(newBook);
 }
 
 // title引数の型を文字列型で宣言している
@@ -34,7 +49,7 @@ function borrowedBook(title :string) {
     return
   }
   selectedBook.available = false;
-  const newBorrowedBook = {
+  const newBorrowedBook: BorrowedBook = {
     id: newBookId++,
     book: selectedBook,
     status: 'borrowed'
@@ -47,28 +62,31 @@ function borrowedBook(title :string) {
 function returnBook(bookId: number) {
   const selectedBook = borrowedBooks.find((book) => book.id === bookId);
   // selectedBookがundifinedだった場合のエラーハンドリングを定義している 
-  if(!selectedBook) {
+  if (!selectedBook) {
     console.error("返却する本が見つかりませんでした")
     return
   }
   selectedBook.book.available = true;
-  selectedBook.status = 'returned';
+  selectedBook.status = 'return';
   return selectedBook;
 }
 
 addNewBook({
+  id: 4,
   title: 'Pythonで学ぶデータサイエンス',
   author: '伊藤花子',
   available: true
 });
 addNewBook({
+  id: 5,
   title: 'Vue.js入門',
   author: '鈴木一郎',
   available: true 
 });
 
 borrowedBook('TypeScript入門');
-returnBook("1");
+returnBook(1);
+getBookDetail("TypeScript入門", books);
 
 console.log(books);
 console.log(borrowedBooks);
